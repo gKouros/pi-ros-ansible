@@ -1,0 +1,139 @@
+---
+
+- name: 'Setup ROS repositories'
+  sudo: yes
+  raw: sh -c 'echo "deb http://packages.ros.org/ros/ubuntu jessie main" > /etc/apt/sources.list.d/ros-latest.list'
+
+- name: 'Get ROS repositories key'
+  sudo: no
+  command: wget https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -O - | sudo apt-key add -
+  ignore_errors: yes
+
+- name: 'Update and Upgrade the Debian package index'
+  sudo: yes
+  apt:
+    upgrade=dist
+    update_cache=yes
+
+- name: 'Install bootstrap dependencies'
+  sudo: yes
+  apt:
+    name={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - python-pip
+    - python-setuptools
+    - python-yaml
+    - python-distribute
+    - python-docutils
+    - python-dateutil
+    - python-six
+    - python-pexpect
+
+- name: 'Install rosdep, rosinstall_generator, wstool and rosinstall'
+  sudo: yes
+  pip:
+    name={{ item }}
+    state=present
+  with_items:
+    - rosdep
+    - rosinstall_generator
+    - wstool
+    - rosinstall
+
+- name: 'Initialize rosdep'
+  sudo: yes
+  command: rosdep init
+
+- name: 'Update rosdep'
+  sudo: no
+  command: rosdep update
+
+- name: 'Create ros catkin workspace'
+  file:
+    path=/home/{{ user }}/ros_catkin_ws
+    state=directory
+    owner={{ user }}
+
+- name: 'Generate robot rosinstall file'
+  raw: rosinstall_generator robot ackermann_msgs map_server joystick_drivers roslint dynamixel_msgs roslint --rosdistro indigo --deps --wet-only --exclude roslisp --tar > /home/{{ user }}/ros_catkin_ws/indigo-robot-wet.rosinstall
+
+- name: 'Initialize workspace and download packages'
+  sudo: no
+  command: wstool init src indigo-robot-wet.rosinstall
+    chdir=/home/{{ user }}/ros_catkin_ws
+
+- name: 'Create external_src dir'
+  file:
+    path=/home/{{ user }}/ros_catkin_ws/external_src
+    state=directory
+    owner={{ user }}
+
+- name: 'Install checkinstall and cmake'
+  sudo: yes
+  apt:
+    name={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - checkinstall
+    - cmake
+
+- name: 'Add extra raspbian repos to sources list'
+  sudo: yes
+  lineinfile:
+    dest=/etc/apt/sources.list
+    line="deb-src http://mirrordirector.raspbian.org/raspbian/ testing main contrib non-free rpi"
+
+- name: 'Install libboost-filesystem-dev, libxml2'
+  sudo: yes
+  apt:
+    name={{ item }}
+    update_cache=yes
+  with_items:
+    - libboost-filesystem-dev
+    - libxml2-dev
+
+- name: 'Donwload and decompress collada-dom-dev source'
+  sudo: no
+  unarchive:
+    src=http://downloads.sourceforge.net/project/collada-dom/Collada%20DOM/Collada%20DOM%202.4/collada-dom-2.4.0.tgz
+    dest=/home/{{ user }}/ros_catkin_ws/external_src
+    copy=no
+    owner={{ user }}
+
+- name: 'Build collada-dom-dev'
+  sudo: no
+  command: cmake .
+    chdir="/home/{{ user }}/ros_catkin_ws/external_src/collada-dom-2.4.0"
+
+- name: 'Install collada-dom-dev'
+  raw: cd /home/{{ user }}/ros_catkin_ws/external_src/collada-dom-2.4.0 && (echo -e "n\n2\ncollada-dom-dev\n\n\n\n\ny\nq\ny\n" | sudo checkinstall make install > /home/{{ user }}/output.txt)
+
+- name: 'Install libassimp3'
+  sudo: yes
+  apt:
+    name=libassimp3
+    state=present
+    update_cache=yes
+
+- name: 'Solve arm error with collada and libassimp3'
+  copy:
+    src=collada_urdf.cpp
+    dest=/home/{{ user }}/ros_catkin_ws/src/robot_model/collada_urdf/src
+    owner={{ user }}
+
+- name: 'Resolve dependencies with rosdep'
+  sudo: no
+  command: rosdep install --from-paths src --ignore-src --rosdistro indigo -y -r --os=debian:jessie
+    chdir=/home/{{ user }}/ros_catkin_ws
+
+# - name: 'Building the catkin workspace(this may take a while)...'
+  # sudo: yes
+  # raw: cd /home/{{ user }}/ros_catkin_ws && ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/indigo -j2  > /home/{{ user }}/output.txt
+
+# - name: 'Add /opt/ros/indigo/setup.bash sourcing in bashrc'
+  # lineinfile:
+    # dest=/home/{{ user }}/.bashrc
+    # line="source /opt/ros/indigo/setup.bash"

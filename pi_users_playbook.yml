@@ -1,0 +1,19 @@
+---
+
+- hosts: pi
+  user: pi
+  tasks:
+    - user:
+        name="{{ user }}"
+        password="{{ password }}"
+        group=admin
+        createhome=yes
+
+- hosts: pi
+  user: "{{ user }}"
+  tasks:
+    - user:
+        name=pi
+        state=absent
+        remove=yes
+        force=yes

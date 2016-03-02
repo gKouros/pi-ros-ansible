@@ -1,0 +1,70 @@
+---
+
+# Bash Configuration
+- name: 'Copy .bashrc'
+  copy:
+    src=.bashrc
+    dest=/home/{{ user }}
+    owner={{ user }}
+
+- name: 'Copy .bash_aliases'
+  copy:
+    src=.bash_aliases
+    dest=/home/{{ user }}
+    owner={{ user }}
+\
+# Vim installation and configuration
+- name: 'Install vim'
+  sudo: yes
+  apt:
+    name=vim
+    update_cache=yes
+
+- name: 'Install exuberant-ctags'
+  apt:
+    name=exuberant-ctags
+    update_cache=yes
+
+- name: 'Create vim home folder'
+  file:
+    path=/home/{{ user }}/.vim
+    state=directory
+    owner={{ user }}
+
+- name: 'Create link to .vimrc'
+  sudo: yes
+  raw: ln -fs /home/{{ user }}/.vim/.vimrc /etc/vim/vimrc
+
+- name: 'Copy vimrc'
+  copy:
+    src=.vimrc
+    dest=/home/{{ user }}/.vim/.vimrc
+
+- name: 'Git clone vundle plugin'
+  git:
+    repo=https://github.com/VundleVim/Vundle.vim.git
+    dest=/home/{{ user }}/.vim/bundle/Vundle.vim
+    accept_hostkey=yes
+    key_file="/home/{{ user }}/.ssh/id_rsa.pub"
+
+- name: 'Change ownership of bundle contents'
+  file:
+    path=/home/{{ user }}/.vim/bundle
+    state=directory
+    owner={{ user }}
+    recurse=yes
+
+- name: 'Install vim plugins via bundle'
+  sudo: no
+  raw: vim -E -s -c "source ~/.vim/.vimrc" +PluginInstall +qall
+  ignore_errors: yes
+
+# update
+- name: 'Update'
+  sudo: yes
+  action: apt update_cache=yes
+
+- name: 'Upgrade'
+  sudo: yes
+  action: apt upgrade=safe
+
