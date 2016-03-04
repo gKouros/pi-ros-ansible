@@ -17,3 +17,7 @@
         state=absent
         remove=yes
         force=yes
+    - authorized_key:
+        user=pandora
+        key={{ lookup('file', '~/.ssh/id_rsa.pub') }}
+        state=present
