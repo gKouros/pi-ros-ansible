@@ -1,6 +1,4 @@
 # catkin workspace, git and ros
-alias ws="cd /home/gkouros/pandora_ws"
-alias repos="cd ~/pandora_ws/src"
 alias cmo="catkin_make --only-pkg-with-deps"
 alias cmr="catkin_make catkin_make -DCATKIN_WHITELIST_PACKAGES="""
 alias gits="git status"
