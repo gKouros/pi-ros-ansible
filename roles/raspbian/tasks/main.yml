@@ -1,6 +1,13 @@
 ---
 
-# Bash Configuration
+- name: "Set Swap space to 1024MB"
+  sudo: yes
+  lineinfile:
+    dest=/etc/dphys-swapfile
+    regexp="CONF_SWAPSIZE\=100"
+    line="CONF_SWAPSIZE=1024"
+    state=present
+
 - name: 'Copy .bashrc'
   copy:
     src=.bashrc
@@ -12,8 +19,7 @@
     src=.bash_aliases
     dest=/home/{{ user }}
     owner={{ user }}
-\
-# Vim installation and configuration
+
 - name: 'Install vim'
   sudo: yes
   apt:
@@ -59,7 +65,6 @@
   raw: vim -E -s -c "source ~/.vim/.vimrc" +PluginInstall +qall
   ignore_errors: yes
 
-# update
 - name: 'Update'
   sudo: yes
   action: apt update_cache=yes
