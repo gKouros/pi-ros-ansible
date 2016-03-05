@@ -57,7 +57,7 @@
     owner={{ user }}
 
 - name: 'Generate robot rosinstall file'
-  raw: rosinstall_generator robot ackermann_msgs map_server joystick_drivers roslint dynamixel_msgs roslint --rosdistro indigo --deps --wet-only --exclude roslisp --tar > /home/{{ user }}/ros_catkin_ws/indigo-robot-wet.rosinstall
+  raw: rosinstall_generator robot ackermann_msgs ros_control controller_manager realtime_tools pcl_ros  map_server joystick_drivers roslint dynamixel_driver navigation roslint   --rosdistro indigo --deps --wet-only --exclude roslisp --tar > /home/{{ user }}/ros_catkin_ws/indigo-robot-wet.rosinstall
 
 - name: 'Initialize workspace and download packages'
   sudo: no
@@ -118,6 +118,16 @@
     state=present
     update_cache=yes
 
+- name: 'Install pcl (might take a while!!!)'
+  sudo: yes
+  apt:
+    name={{ item }}
+    state=present
+    update_cache=yes
+  with_items:
+    - libpcl1.7
+    - libpcl-dev
+
 - name: 'Solve arm error with collada and libassimp3'
   copy:
     src=collada_urdf.cpp
@@ -129,11 +139,11 @@
   command: rosdep install --from-paths src --ignore-src --rosdistro indigo -y -r --os=debian:jessie
     chdir=/home/{{ user }}/ros_catkin_ws
 
-# - name: 'Building the catkin workspace(this may take a while)...'
-  # sudo: yes
-  # raw: cd /home/{{ user }}/ros_catkin_ws && ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/indigo -j2  > /home/{{ user }}/output.txt
+- name: 'Building the catkin workspace(this may take a while)...'
+  sudo: yes
+  raw: cd /home/{{ user }}/ros_catkin_ws && ./src/catkin/bin/catkin_make_isolated --install -DCMAKE_BUILD_TYPE=Release --install-space /opt/ros/indigo -j2  > /home/{{ user }}/output.txt
 
-# - name: 'Add /opt/ros/indigo/setup.bash sourcing in bashrc'
-  # lineinfile:
-    # dest=/home/{{ user }}/.bashrc
-    # line="source /opt/ros/indigo/setup.bash"
+- name: 'Add /opt/ros/indigo/setup.bash sourcing in bashrc'
+  lineinfile:
+    dest=/home/{{ user }}/.bashrc
+    line="source /opt/ros/indigo/setup.bash"
