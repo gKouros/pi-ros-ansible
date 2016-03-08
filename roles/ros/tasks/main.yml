@@ -57,7 +57,7 @@
     owner={{ user }}
 
 - name: 'Generate robot rosinstall file'
-  raw: rosinstall_generator robot ackermann_msgs ros_control controller_manager realtime_tools pcl_ros  map_server joystick_drivers roslint dynamixel_driver navigation roslint   --rosdistro indigo --deps --wet-only --exclude roslisp --tar > /home/{{ user }}/ros_catkin_ws/indigo-robot-wet.rosinstall
+  raw: rosinstall_generator robot ackermann_msgs ros_control hokuyo_node driver_common controller_manager realtime_tools pcl_ros map_server joystick_drivers roslint dynamixel_driver navigation roslint rosserial serial --rosdistro indigo --deps --wet-only --exclude roslisp --tar > /home/{{ user }}/ros_catkin_ws/indigo-robot-wet.rosinstall
 
 - name: 'Initialize workspace and download packages'
   sudo: no
@@ -115,6 +115,13 @@
   sudo: yes
   apt:
     name=libassimp3
+    state=present
+    update_cache=yes
+
+- name: 'Install libusb'
+  sudo: yes
+  apt:
+    name=libusb-1.0-dev
     state=present
     update_cache=yes
 
