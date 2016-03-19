@@ -8,6 +8,23 @@
     line="CONF_SWAPSIZE=1024"
     state=present
 
+- name: "Copy switch_halt script to /usr/local/bin"
+  sudo: yes
+  copy:
+    src=switch_halt
+    dest=/usr/local/bin
+    mode="a+rwx"
+
+- name: "Add script execution in rc.local"
+  sudo: yes
+  lineinfile:
+    dest=/etc/rc.local
+    regexp="exit 0"
+    insertbefore=yes
+    line=switch_halt
+    state=present
+
+
 - name: 'Copy .bashrc'
   copy:
     src=.bashrc
