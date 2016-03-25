@@ -10,6 +10,6 @@ def shutdown(pin):
     call('halt', shell=False)
 
 gpio.setmode(gpio.BCM)
-gpio.setup(21, gpio.IN, pull_up_down=gpio.PUD_UP, )
-gpio.add_event_detect(21, gpio.FALLING, , callback=shutdown, bouncetime=200)
+gpio.setup(21, gpio.IN, pull_up_down=gpio.PUD_UP)
+gpio.add_event_detect(21, gpio.FALLING, callback=shutdown, bouncetime=200)
 loop()

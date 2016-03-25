@@ -1,5 +1,11 @@
 ---
 
+- name: "Add key to hosts authorized_keys"
+  authorized_key:
+    user=pandora
+    key={{ lookup('file', '~/.ssh/id_rsa.pub') }}
+    state=present
+
 - name: "Set Swap space to 1024MB"
   sudo: yes
   lineinfile:
@@ -15,12 +21,11 @@
     dest=/usr/local/bin
     mode="a+rwx"
 
-- name: "Add script execution in rc.local"
+- name: "Add switch_halt call in rc.local"
   sudo: yes
   lineinfile:
     dest=/etc/rc.local
-    regexp="exit 0"
-    insertbefore=yes
+    insertbefore="exit 0"
     line=switch_halt
     state=present
 
@@ -62,6 +67,7 @@
   copy:
     src=.vimrc
     dest=/home/{{ user }}/.vim/.vimrc
+    owner={{ user }}
 
 - name: 'Git clone vundle plugin'
   git:
@@ -70,14 +76,14 @@
     accept_hostkey=yes
     key_file="/home/{{ user }}/.ssh/id_rsa.pub"
 
-- name: 'Change ownership of bundle contents'
+- name: 'Change ownership of vim directory'
   file:
-    path=/home/{{ user }}/.vim/bundle
+    path=/home/{{ user }}/.vim
     state=directory
     owner={{ user }}
     recurse=yes
 
-- name: 'Install vim plugins via bundle'
+- name: 'Install vim plugins via vundle'
   sudo: no
   raw: vim -E -s -c "source ~/.vim/.vimrc" +PluginInstall +qall
   ignore_errors: yes
