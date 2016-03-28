@@ -91,6 +91,7 @@ set clipboard=unnamed         " use the system clipboard for for yank/put/delete
 set laststatus=2                                      " always show status lines
 set ruler                                                   " show column number
 set mouse=v                                           " enable mouse in terminal
+set backspace=2
 " set textwidth=80
 set listchars=eol:¬,tab:\|\ ,trail:~,extends:>,precedes:<       " set list chars
 autocmd BufWritePre * :%s/\s\+$//e                " - remove whitespaces on save
